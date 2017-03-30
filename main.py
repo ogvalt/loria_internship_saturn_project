@@ -4,7 +4,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-from sompy.sompy import SOMFactory
 
 cam = cv2.VideoCapture("lol.mp4")
 
@@ -52,9 +51,13 @@ while True:
 cam.release()
 cv2.destroyAllWindows()
 
-a = plt.plot(data_edges, data_movement, 'ob')
-
 print(data_movement, data_movement.min(), data_movement.max())
 print(data_edges, data_edges.min(), data_edges.max())
 
-plt.show(a)
+data = np.vstack([data_edges, data_movement])
+
+plt.plot(range(0, len(data[0])), data[0], range(0, len(data[1])), data[1])
+
+plt.show()
+
+
