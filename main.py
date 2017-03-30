@@ -1,4 +1,3 @@
-# TODO: SOM
 # TODO: Spiking SOM
 
 import numpy as np
