@@ -122,3 +122,17 @@ class SOM:
         """
         for i in range(0, self.number_of_learning_epoch):
             self.update_epoch(data)
+
+    def image_suitable_conversion(self):
+        """
+        Convert prototype vectors to uint8 representation in range of [0, 255] in order
+        to visualize lattice
+
+        :return: re-arranged prototype vectors
+        :rtype: np.array, dtype = np.uint8
+        """
+        temp = self.lattice - self.lattice.min()
+        temp /= temp.max()
+        temp *= 255
+        temp = temp.astype(np.uint8)
+        return temp
