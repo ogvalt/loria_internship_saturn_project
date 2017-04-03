@@ -47,7 +47,22 @@ class SOM:
         '''Initial lattice configuration (only random initialization mode) '''
         self.lattice = np.random.rand(self.map_size[0], self.map_size[1], self.prototype_dimension)
         '''Initial connection matrix'''
-        self.connection_array = np.ones((self.map_size[0], self.map_size[1]))
+        self.connection_array = []
+        self.connection_init()
+
+    def connection_init(self):
+        """
+        Connection matrix initialization
+        :return:
+        """
+        row_size = self.lattice.shape[0]
+        for i, j in np.ndindex(self.map_size):
+            self.connection_array.extend([np.array([j, (i+1) * row_size + j]), np.array([j, j+1]),
+                                         np.array([j, (i-1) * row_size + j]), np.array([j, j-1])])
+            # TODO: Add boundary restriction
+        print(self.connection_array)
+        self.connection_array = np.array(self.connection_array)
+        print(self.connection_array)
 
     def neighbourhood_radius(self, epoch: int) -> float:
         """

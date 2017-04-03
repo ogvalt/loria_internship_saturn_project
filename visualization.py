@@ -71,12 +71,12 @@ class SomVisualization:
 
         self.show_window()
 
-    def colormap_show(self):
-        """
-
-        :return:
-        """
-        # TODO: separate windows and widget creation
+    # def color_map_show(self):
+    #     """
+    #
+    #     :return:
+    #     """
+    #     # TODO: separate windows and widget creation
 
     def show_window(self):
         """
@@ -85,19 +85,35 @@ class SomVisualization:
         if not sys.flags.interactive or not hasattr(QtCore, 'PYQT_VERSION'):
             QtGui.QApplication.instance().exec_()
 
-    # def topologycalmap_build(self):
-    #
+    def topology_map_build(self):
+        """
+        Topology map build
+        :return:
+        """
+        self.win = QtGui.QMainWindow()
+
+        l_pen = pg.mkPen(color='r', width=2)
+
+        graph_widget = pg.GraphItem()
+        graph_widget.setData(pos=self.som.lattice.flatten(), adj=self.som.connection_array, pen=l_pen)
+
+        self.win.setCentralWidget(graph_widget)
+        self.win.show()
+        self.win.setWindowTitle("Color map")
+
+        self.show_window()
+
     # def som_show(self):
     #
     # def som_interactive(self):
 
 
 if __name__ == "__main__":
-    map = SOM(map_size=(10, 10), proto_dim=3)
+    map = SOM(map_size=(10, 10), proto_dim=2)
     data = np.random.rand(100, 2)
     lol = SomVisualization(map)
-    lol.colormap_build()
-
+    # lol.colormap_build()
+    lol.topology_map_build()
 
 
 
