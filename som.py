@@ -1,6 +1,4 @@
 # TODO: DEBUG Current version of SOM
-# TODO: Add weighted relations between neuron
-# TODO: Implement visualization
 
 import numpy as np
 
@@ -53,16 +51,39 @@ class SOM:
     def connection_init(self):
         """
         Connection matrix initialization
-        :return:
+
+        :return: None
         """
         row_size = self.lattice.shape[0]
         for i, j in np.ndindex(self.map_size):
-            self.connection_array.extend([np.array([j, (i+1) * row_size + j]), np.array([j, j+1]),
-                                         np.array([j, (i-1) * row_size + j]), np.array([j, j-1])])
-            # TODO: Add boundary restriction
-        print(self.connection_array)
+            if i == 0:
+                if j == 0:
+                    self.connection_array.extend([np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0])])
+                elif j == (self.map_size[1]-1):
+                    self.connection_array.extend([np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0])])
+                else:
+                    self.connection_array.extend([np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
+                                                  np.array([j, j - 1, 1.0])])
+            elif i == (self.map_size[0]-1):
+                if j == 0:
+                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0])])
+                elif j == (self.map_size[1]-1):
+                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0])])
+                else:
+                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
+                                                  np.array([j, j - 1, 1.0])])
+            else:
+                if j == 0:
+                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
+                                                  np.array([j, (i+1) * row_size + j, 1.0])])
+                elif j == (self.map_size[1]-1):
+                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0]),
+                                                  np.array([j, (i+1) * row_size + j, 1.0])])
+                else:
+                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
+                                                  np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0])])
+
         self.connection_array = np.array(self.connection_array)
-        print(self.connection_array)
 
     def neighbourhood_radius(self, epoch: int) -> float:
         """
@@ -149,5 +170,7 @@ class SOM:
         temp = self.lattice - self.lattice.min()
         temp /= temp.max()
         temp *= 255
+        if self.prototype_dimension == 2:
+            temp = np.dstack((temp, np.zeros((self.map_size[0], self.map_size[1], 1))))
         temp = temp.astype(np.uint8)
         return temp

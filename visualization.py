@@ -16,29 +16,24 @@ class SomVisualization:
         :param som: Self-organizing map object
         :return None
         """
+        self.color_view = None
+        self.topology_view = None
         self.som = som
-
+        # Create Qt app
         self.app = QtGui.QApplication([])
-        self.win = None
-        self.lol = None
-        # pg.setConfigOption('background', 'w')
-        # pg.setConfigOption('antialias', 'True')
-        # self.win = pg.GraphicsWindow(title="Self-organizing map")
-        # self.win.resize(1000, 600)
+        # Create main window
+        self.win = QtGui.QMainWindow()
+        pg.setConfigOption('antialias', 'True')
+        self.win.resize(800, 400)
 
     def colormap_build(self):
         """
         Create color mapping of self-organizing map
+
+        :return Widget with color map
         """
-        self.win = QtGui.QMainWindow()
-
-        graphics_widget = pg.GraphicsLayoutWidget()
-
-        self.win.setCentralWidget(graphics_widget)
-        self.win.show()
-        self.win.setWindowTitle("Color map")
-
-        lattice = self.som.image_suitable_conversion()
+        graphics_widget = pg.GraphicsLayout()
+        image_items = []
 
         if self.som.prototype_dimension > 3:
             for i in range(0, self.som.prototype_dimension):
@@ -48,55 +43,32 @@ class SomVisualization:
                 view.setAspectLocked(True)
 
                 img = pg.ImageItem(border='w')
+                image_items.append(img)
 
                 view.addItem(img)
-                view.setRange(QtCore.QRectF(0, 0, lattice.shape[0], lattice.shape[1]))
+                view.setRange(QtCore.QRectF(0, 0, self.som.lattice.shape[0], self.som.lattice.shape[1]))
 
                 graphics_widget.nextRow()
-
-                img.setImage(lattice[:, :, i], autoLevels=False)
 
         else:
             view = graphics_widget.addViewBox(row=0, col=0, name="Self-organizing map")
             view.setAspectLocked(True)
 
             img = pg.ImageItem(border='w')
+            image_items = img
 
             view.addItem(img)
-            view.setRange(QtCore.QRectF(0, 0, lattice.shape[0], lattice.shape[1]))
+            view.setRange(QtCore.QRectF(0, 0, self.som.lattice.shape[0], self.som.lattice.shape[1]))
 
-            img.setImage(lattice, autoLevels=False)
-        # TODO: Separate setup widget parameter and image update
-        # print(graphics_widget.itemIndex(item=pg.ViewBox))
-
-        self.show_window()
-
-    # def color_map_show(self):
-    #     """
-    #
-    #     :return:
-    #     """
-    #     # TODO: separate windows and widget creation
-
-    def show_window(self):
-        """
-        Run
-        """
-        if not sys.flags.interactive or not hasattr(QtCore, 'PYQT_VERSION'):
-            QtGui.QApplication.instance().exec_()
+        return graphics_widget, image_items
 
     def topology_map_build(self):
         """
         Topology map build
-        :return:
+
+        :return: Widget with topology map
         """
-        self.win = QtGui.QMainWindow()
-
-        graphics_widget = pg.GraphicsLayoutWidget()
-
-        self.win.setCentralWidget(graphics_widget)
-        self.win.show()
-        self.win.setWindowTitle("Topology map")
+        graphics_widget = pg.GraphicsLayout()
 
         view = graphics_widget.addViewBox()
         view.setAspectLocked(True)
@@ -104,23 +76,74 @@ class SomVisualization:
         graph_item = pg.GraphItem()
         view.addItem(graph_item)
 
-        l_pen = pg.mkPen(color='w', width=3)
-        graph_item.setData(pos=np.array([[0, 0], [0, 1], [1, 1], [1, 0]]),
-                           adj=np.array([[0, 1], [0, 2], [2, 3]]), pen=l_pen, size=20)
+        l_pen = pg.mkPen(color='w', width=1)
 
-        self.show_window()
+        graph_item.setPen(l_pen)
 
-    # def som_show(self):
-    #
-    # def som_interactive(self):
+        return graphics_widget, graph_item
+
+    def main_widget_construct(self, options=None):
+        """
+        Construct main widget
+        :param options: specify what SOM representation shows: None = both, 'color' - color map,
+                        'topology' - topology map
+        :type options: str
+
+        :return: None
+        """
+        # Add GraphicsLayoutWidget that will contain all visualization
+        main_widget = pg.GraphicsLayoutWidget()
+        # Set main_widget as central widget
+        self.win.setCentralWidget(main_widget)
+        self.win.show()
+        self.win.setWindowTitle("Self-organizing map")
+        # Create color map layout
+        color_map_layout, self.color_view = self.colormap_build()
+        # Create topology map layout
+        topology_map_layout, self.topology_view = self.topology_map_build()
+        # Add layout to main widget
+        if options == 'color':
+            main_widget.addItem(color_map_layout)
+        elif options == 'topology':
+            main_widget.addItem(topology_map_layout)
+        elif options is None:
+            main_widget.addItem(color_map_layout)
+            main_widget.addItem(topology_map_layout)
+        else:
+            raise Exception("Unknown options value, could be: None, 'color', 'topology' ")
+
+    def update_data(self):
+        """
+        Update GUI with new data from SOM
+
+        :return: None
+        """
+        self.topology_view.setData(pos=self.som.lattice.reshape(self.som.map_size[0] * self.som.map_size[1],
+                                                                self.som.prototype_dimension),
+                                   adj=self.som.connection_array[:, 0:2].astype(np.uint32), size=10)
+
+        lattice = self.som.image_suitable_conversion()
+        if isinstance(self.color_view, list):
+            i = 0
+            for item in self.color_view:
+                item.setImage(lattice[:, :, i], autoLevels=False)
+                i += 1
+        else:
+            self.color_view.setImage(lattice, autoLevels=False)
+
+    def run(self):
+        self.main_widget_construct()
+        QtCore.QTimer.singleShot(1, self.update_data)
 
 
 if __name__ == "__main__":
-    map = SOM(map_size=(10, 10), proto_dim=2)
+    som_map = SOM(map_size=(20, 20), proto_dim=5)
     data = np.random.rand(100, 2)
-    lol = SomVisualization(map)
-    # lol.colormap_build()
-    lol.topology_map_build()
+    lol = SomVisualization(som_map)
+    lol.run()
+
+    if not sys.flags.interactive or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
 
 
 
