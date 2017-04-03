@@ -3,7 +3,8 @@ import sys
 # Third-part libs
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-# Local dependencies
+import time
+
 from som import *
 
 
@@ -25,6 +26,7 @@ class SomVisualization:
         self.win = QtGui.QMainWindow()
         pg.setConfigOption('antialias', 'True')
         self.win.resize(800, 400)
+        self.main_widget_construct()
 
     def colormap_build(self):
         """
@@ -112,7 +114,7 @@ class SomVisualization:
         else:
             raise Exception("Unknown options value, could be: None, 'color', 'topology' ")
 
-    def update_data(self):
+    def update_view(self):
         """
         Update GUI with new data from SOM
 
@@ -126,24 +128,29 @@ class SomVisualization:
         if isinstance(self.color_view, list):
             i = 0
             for item in self.color_view:
-                item.setImage(lattice[:, :, i], autoLevels=False)
+                item.setImage(lattice[:, :, i], autoLevels=True)
                 i += 1
         else:
-            self.color_view.setImage(lattice, autoLevels=False)
+            self.color_view.setImage(lattice, autoLevels=True)
+
+    def update(self):
+        self.som.update_epoch()
+        self.update_view()
+        if self.som.epoch_counter < self.som.number_of_learning_epoch:
+            QtCore.QTimer.singleShot(40, self.update)
 
     def run(self):
-        self.main_widget_construct()
-        QtCore.QTimer.singleShot(1, self.update_data)
-
+        self.update()
+        if not sys.flags.interactive or not hasattr(QtCore, 'PYQT_VERSION'):
+            QtGui.QApplication.instance().exec_()
 
 if __name__ == "__main__":
-    som_map = SOM(map_size=(20, 20), proto_dim=5)
+    som_map = SOM(data=0, map_size=(20, 20), proto_dim=3)
     data = np.random.rand(100, 2)
     lol = SomVisualization(som_map)
     lol.run()
 
-    if not sys.flags.interactive or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+
 
 
 

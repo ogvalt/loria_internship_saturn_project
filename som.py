@@ -7,7 +7,7 @@ class SOM:
 
     epoch_counter = 0
 
-    def __init__(self, map_size: tuple = (10, 10), proto_dim: int = 3,
+    def __init__(self, data: np.array, map_size: tuple = (10, 10), proto_dim: int = 3,
                  number_of_epochs: int = 100,
                  learning_rate_init: float = 0.1,
                  neighbourhood_radius_init: float or None = None,
@@ -22,6 +22,8 @@ class SOM:
         :param neighbourhood_radius_init: Initial neighbourhood radius
         :param neighbourhood_radius_time_const: Time constant of neighbourhood radius
         """
+        ''' Codebook '''
+        self.data = data
         '''Initial value for dimensions of the map'''
         self.map_size = map_size
         self.prototype_dimension = proto_dim
@@ -130,34 +132,32 @@ class SOM:
             exp_power = np.exp(-(dx * dx + dy * dy) / (2 * neighbourhood_radius * neighbourhood_radius))
             self.lattice[i][j] += learning_rate * exp_power * (input_vector - self.lattice[i][j])
 
-    def update_epoch(self, data: np.array) -> None:
+    def update_epoch(self) -> None:
         """
         Update prototype within epoch
 
-        :param data: Entire codebook
         :return None
         """
         learning_rate_current = self.learning_rate(self.epoch_counter)
         neighbourhood_radius_current = self.neighbourhood_radius(self.epoch_counter)
 
         '''Order of input data vectors in which they will be processed by SOM'''
-        vector_sequence = np.arange(0, len(data))
+        vector_sequence = np.arange(0, len(self.data))
         np.random.shuffle(vector_sequence)
 
         for single in vector_sequence:
-            self.update_step(data[single], learning_rate_current, neighbourhood_radius_current)
+            self.update_step(self.data[single], learning_rate_current, neighbourhood_radius_current)
 
         self.epoch_counter += 1
 
-    def learn(self, data: np.array) -> None:
+    def learn(self) -> None:
         """
         Perform LEARNING phase of SOM
 
-        :param data: Input codebook
         :return None
         """
         for i in range(0, self.number_of_learning_epoch):
-            self.update_epoch(data)
+            self.update_epoch()
 
     def image_suitable_conversion(self):
         """
