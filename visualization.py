@@ -92,14 +92,21 @@ class SomVisualization:
         """
         self.win = QtGui.QMainWindow()
 
-        l_pen = pg.mkPen(color='r', width=2)
+        graphics_widget = pg.GraphicsLayoutWidget()
 
-        graph_widget = pg.GraphItem()
-        graph_widget.setData(pos=self.som.lattice.flatten(), adj=self.som.connection_array, pen=l_pen)
-
-        self.win.setCentralWidget(graph_widget)
+        self.win.setCentralWidget(graphics_widget)
         self.win.show()
-        self.win.setWindowTitle("Color map")
+        self.win.setWindowTitle("Topology map")
+
+        view = graphics_widget.addViewBox()
+        view.setAspectLocked(True)
+
+        graph_item = pg.GraphItem()
+        view.addItem(graph_item)
+
+        l_pen = pg.mkPen(color='w', width=3)
+        graph_item.setData(pos=np.array([[0, 0], [0, 1], [1, 1], [1, 0]]),
+                           adj=np.array([[0, 1], [0, 2], [2, 3]]), pen=l_pen, size=20)
 
         self.show_window()
 
