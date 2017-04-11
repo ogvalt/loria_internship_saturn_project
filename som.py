@@ -11,7 +11,8 @@ class SOM:
                  number_of_epochs: int = 100,
                  learning_rate_init: float = 0.1,
                  neighbourhood_radius_init: float or None = None,
-                 neighbourhood_radius_time_const: float or None = None) -> None:
+                 neighbourhood_radius_time_const: float or None = None,
+                 save_after=None) -> None:
         """
         Initialized Self-organizing map parameter
 
@@ -21,6 +22,7 @@ class SOM:
         :param learning_rate_init: Initial learning rate
         :param neighbourhood_radius_init: Initial neighbourhood radius
         :param neighbourhood_radius_time_const: Time constant of neighbourhood radius
+        :param save_after: Save prototype vectors of SOM after specified number of iteration
         """
         ''' Codebook '''
         self.data = data
@@ -29,6 +31,7 @@ class SOM:
         self.prototype_dimension = proto_dim
 
         self.number_of_learning_epoch = number_of_epochs
+        self.save_after = save_after
 
         '''Initial parameter for learning rate'''
         self.learning_rate_init = learning_rate_init
@@ -147,6 +150,11 @@ class SOM:
 
         for single in vector_sequence:
             self.update_step(self.data[single], learning_rate_current, neighbourhood_radius_current)
+
+        if self.save_after is not None:
+            if not (self.epoch_counter % self.save_after):
+                np.savetxt(fname="SOM_after_{0}_epoch.txt".format(self.epoch_counter), X=self.lattice,
+                           fmt="%s", delimiter=";\n", comments="SOM's prototype vectors")
 
         self.epoch_counter += 1
 

@@ -19,6 +19,8 @@ class SomVisualization:
         """
         self.color_view = None
         self.topology_view = None
+        self.label_view = None
+
         self.som = som
         # Create Qt app
         self.app = QtGui.QApplication([])
@@ -72,7 +74,7 @@ class SomVisualization:
         """
         graphics_widget = pg.GraphicsLayout()
 
-        view = graphics_widget.addViewBox()
+        view = graphics_widget.addViewBox(col=0, row=0)
         view.setAspectLocked(True)
 
         graph_item = pg.GraphItem()
@@ -82,7 +84,9 @@ class SomVisualization:
 
         graph_item.setPen(l_pen)
 
-        return graphics_widget, graph_item
+        label_item = graphics_widget.addLabel(text="Epoch number 0", col=0, row=1)
+
+        return graphics_widget, graph_item, label_item
 
     def main_widget_construct(self, options=None):
         """
@@ -102,7 +106,7 @@ class SomVisualization:
         # Create color map layout
         color_map_layout, self.color_view = self.colormap_build()
         # Create topology map layout
-        topology_map_layout, self.topology_view = self.topology_map_build()
+        topology_map_layout, self.topology_view, self.label_view = self.topology_map_build()
         # Add layout to main widget
         if options == 'color':
             main_widget.addItem(color_map_layout)
@@ -133,10 +137,12 @@ class SomVisualization:
         else:
             self.color_view.setImage(lattice, autoLevels=True)
 
+        self.label_view.setText("Epoch number {0}".format(self.som.epoch_counter), color="FFFFFF")
+
     def update(self):
         self.som.update_epoch()
         self.update_view()
-        if self.som.epoch_counter < self.som.number_of_learning_epoch:
+        if self.som.epoch_counter <= self.som.number_of_learning_epoch:
             QtCore.QTimer.singleShot(40, self.update)
 
     def run(self):
