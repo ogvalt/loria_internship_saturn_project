@@ -12,7 +12,7 @@ data_set_instance.visualize_data()
 data = data_set_instance.merge_data_set()
 # Perform SOM training
 
-som_map = som.SOM(data, proto_dim=2, learning_rate_init=0.001, save_after=10)
+som_map = som.SOM(data, proto_dim=2, learning_rate_init=0.001, save_after=None)
 visual = visualization.SomVisualization(som=som_map)
 visual.run()
 
