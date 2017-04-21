@@ -3,15 +3,14 @@ from brian2 import *
 
 
 class ReceptiveField:
-
     # Parameter that used in standard deviation definition
     gamma = 1.
 
     def __init__(self, bank_size=10, I_min=0.0, I_max=1.0):
         self.bank_size = bank_size
-        self.field_mu = np.array([(I_min + ((2*i - 3)/2) * ((I_max - I_min)/(bank_size - 2)))
+        self.field_mu = np.array([(I_min + ((2 * i - 3) / 2) * ((I_max - I_min) / (bank_size - 2)))
                                   for i in range(1, bank_size + 1)])
-        self.field_sigma = (1.0/self.gamma) * ((I_max - I_min))
+        self.field_sigma = (1.0 / self.gamma) * ((I_max - I_min))
 
     def float_to_membrane_potential(self, input_vector):
         try:
@@ -47,14 +46,22 @@ if __name__ == "__main__":
     # print(rf.float_to_membrane_potential(vect))
     inputs = np.array([0.40, 0.95, 0.77])
     inputs = np.array([0.4])
-    random_sequence = np.array([0.56431847,  0.88662475,  0.46637221,  0.86791681,  0.45770412,
-                                0.43807465,  0.54490613,  0.74294809,  0.99951500,  0.55794921,
-                                0.42337986,  0.37427021,  0.79028469,  0.81061864,  0.27765872,
-                                0.19199684,  0.26997830,  0.23755365,  0.43877926,  0.45280514,
-                                0.53461819,  0.45465584,  0.35832316,  0.49497293,  0.76410138,
-                                0.97565988,  0.41807296,  0.94778919,  0.52665305,  0.73782955])
+    random_sequence = np.array([0.56431847, 0.88662475, 0.46637221, 0.86791681, 0.45770412,
+                                0.43807465, 0.54490613, 0.74294809, 0.79951500, 0.55794921,
+                                0.42337986, 0.37427021, 0.79028469, 0.81061864, 0.27765872,
+                                0.19199684, 0.26997830, 0.23755365, 0.43877926, 0.45280514,
+                                0.53461819, 0.45465584, 0.35832316, 0.49497293, 0.76410138,
+                                0.97565988, 0.41807296, 0.94778919, 0.52665305, 0.73782955])
 
     N = 10
+    time_step = 0.01
+
+    A_plus = 0.0016
+    A_minus = 0.0055
+
+    tau_plus = 11
+    tau_minus = 10
+
     # inputs = np.random.rand(3, 1)
     potential_input = rf.float_to_membrane_potential(inputs)
     potential_input = potential_input.flatten()
@@ -70,23 +77,7 @@ if __name__ == "__main__":
     tau_r_inh2u = 1.0 * ms
     tau_f_inh2u = 5.0 * ms
     teta_u = 0.5
-
-    equ = '''
-        # inhibition connection to u layer
-        ds_inh2u/dt = (-s_inh2u)/tau_r_inh2u: 1
-        dw_inh2u/dt = (s_inh2u - w_inh2u)/tau_f_inh2u: 1
-
-        # membrane potential of u layer
-        dv/dt = (-v + I_ext - w_inh2u) / tau_m: 1
-        I_ext : 1
-    '''
-
-    temporal_layer = NeuronGroup(N, equ, threshold='v>teta_u', reset='v=teta_reset_u', method=diff_method)
-
-    temporal_layer.I_ext = potential_input
-    # temporal_layer.I_ext = 0.4
-    # inhibition neuron
-
+    # inh neuron
     tau_inh = 0.5 * ms
 
     tau_r_exc = 0.4 * ms
@@ -98,10 +89,34 @@ if __name__ == "__main__":
     teta_u_inh = 0.01
     teta_reset_inh = -0.1
 
+    equ = '''
+        drr/dt = 1 / ms : 1
+        
+        # inhibition connection to u layer
+        
+        ds_inh2u/dt = (-s_inh2u)/tau_r_inh2u: 1
+        dw_inh2u/dt = (s_inh2u - w_inh2u)/tau_f_inh2u: 1
+
+        # membrane potential of u layer
+        
+        dv/dt = (-v + I_ext - w_inh2u) / tau_m: 1
+        I_ext : 1
+    '''
+
+    temporal_layer = NeuronGroup(N, equ, threshold='v>teta_u', method=diff_method,
+                                 reset='''v = teta_reset_u; rr = 0''')
+
+    temporal_layer.I_ext = potential_input
+    # temporal_layer.I_ext = 0.4
+    # inhibition neuron
+
     inh_equ = '''
+        drr/dt = 1 / ms : 1
+        
         # inhibition connection
         # s_inh - internal variable
         # w_inh - output potential
+        
         ds_inh/dt = (-s_inh)/tau_r_inh: 1
         dw_inh/dt = (s_inh - w_inh)/tau_f_inh: 1
 
@@ -114,30 +129,64 @@ if __name__ == "__main__":
         # diff equation membrane potential of inhibition neuron
         dv/dt = (-v + w_exc - w_inh) / tau_inh: 1
     '''
-    inhibition_neuron = NeuronGroup(1, inh_equ, threshold='v>teta_u_inh', reset='v=teta_reset_inh', method=diff_method)
+    inhibition_neuron = NeuronGroup(1, inh_equ, method=diff_method, threshold='v>teta_u_inh',
+                                    reset='''
+                                            v = teta_reset_inh
+                                            rr = 0 
+                                            ''')
 
     # v to inh neuron, excitation connection
-    u2inh_excitation = Synapses(temporal_layer, target=inhibition_neuron, method=diff_method, on_pre="s_exc += w_syn",
+    u2inh_excitation = Synapses(temporal_layer, target=inhibition_neuron, method=diff_method,
+                                on_pre='''
+                                s_exc += w_syn
+                                Apre = (- w_syn) * A_minus * (1 - 1/tau_minus) ** rr_post
+                                w_syn = clip(w_syn + plasticity * Apre, 0, w_syn_u2inh_exc_max) 
+                                ''',
+                                on_post='''
+                                Apost = exp(-w_syn) * A_plus * (1 - 1/tau_plus) ** rr_pre
+                                w_syn = clip(w_syn + plasticity * Apost, 0, w_syn_u2inh_exc_max)
+                                ''',
                                 model='''
-                                    w_syn : 1 # synaptic weight / synapse efficacy
+                                w_syn : 1 # synaptic weight / synapse efficacy
+                                plasticity : boolean (shared)
                                 ''')
     u2inh_excitation.connect(i=np.arange(N), j=0)
     # u2inh_excitation.w_syn = 'rand() * w_syn_u2inh_exc_max'
     u2inh_excitation.w_syn = random_sequence[0:10] * w_syn_u2inh_exc_max
 
     # v to inh neuron, inhibition connection
-    u2inh_inhibition = Synapses(temporal_layer, target=inhibition_neuron, method=diff_method, on_pre="s_inh += w_syn",
+    u2inh_inhibition = Synapses(temporal_layer, target=inhibition_neuron, method=diff_method,
+                                on_pre='''
+                                s_inh += w_syn
+                                Apre = (- w_syn) * A_minus * (1 - 1/tau_minus) * rr_post
+                                w_syn = clip(w_syn + plasticity * Apre, 0, w_syn_u2inh_inh_max) 
+                                ''',
+                                on_post='''
+                                Apost = exp(-w_syn) * A_plus * (1 - 1/tau_plus) * rr_pre
+                                w_syn = clip(w_syn + plasticity * Apost, 0, w_syn_u2inh_inh_max)
+                                ''',
                                 model='''
-                                    w_syn : 1 # synaptic weight / synapse efficacy                            
+                                w_syn : 1 # synaptic weight / synapse efficacy 
+                                plasticity : boolean (shared)
                                 ''')
+
     u2inh_inhibition.connect(i=np.arange(N), j=0)
     # u2inh_inhibition.w_syn = 'rand() * w_syn_u2inh_inh_max'
     u2inh_inhibition.w_syn = random_sequence[10:20] * w_syn_u2inh_inh_max
-
     # inh neuron to v, inhibition connection
-    inh2u_inhibition = Synapses(inhibition_neuron, target=temporal_layer, method=diff_method, on_pre="s_inh2u += w_syn",
+    inh2u_inhibition = Synapses(inhibition_neuron, target=temporal_layer, method=diff_method,
+                                on_pre='''
+                                s_inh2u += w_syn
+                                Apre = (- w_syn) * A_minus * (1 - 1/tau_minus) * rr_post
+                                w_syn = clip(w_syn + plasticity * Apre, 0, w_syn_inh2u_max)
+                                ''',
+                                on_post='''
+                                Apost = exp(-w_syn) * A_plus * (1 - 1/tau_plus) * rr_pre
+                                w_syn = clip(w_syn + plasticity * Apost, 0, w_syn_inh2u_max)
+                                ''',
                                 model='''
-                                    w_syn : 1 # synaptic weight / synapse efficacy
+                                w_syn : 1 # synaptic weight / synapse efficacy
+                                plasticity : boolean (shared)
                                 ''')
     inh2u_inhibition.connect(i=0, j=np.arange(N))
     # inh2u_inhibition.w_syn = 'rand() * w_syn_inh2u_max'
@@ -145,6 +194,7 @@ if __name__ == "__main__":
 
     u_spike_mon = SpikeMonitor(temporal_layer)
     u_state_mon_v = StateMonitor(temporal_layer, 'v', record=True)
+    u_state_mon_rr = StateMonitor(temporal_layer, 'rr', record=True)
     u_state_mon_w = StateMonitor(temporal_layer, 'w_inh2u', record=True)
 
     inh_spike_mon = SpikeMonitor(inhibition_neuron)
@@ -152,23 +202,31 @@ if __name__ == "__main__":
     w_exc_neu_state = StateMonitor(inhibition_neuron, 'w_exc', record=True)
     w_inh_neu_state = StateMonitor(inhibition_neuron, 'w_inh', record=True)
 
-    defaultclock.dt = 0.1*ms
+    w_syn_u2inh_exc = StateMonitor(u2inh_excitation, 'w_syn', record=True)
 
-    simulation_time = 10
+    defaultclock.dt = time_step * ms
+
+    simulation_time = 4
     step = 0.2
+
+    plasticity_state = True
+
+    u2inh_excitation.plasticity = plasticity_state
+    u2inh_inhibition.plasticity = plasticity_state
+    inh2u_inhibition.plasticity = plasticity_state
 
     run(simulation_time * ms, report='text')
 
-    subplot(321)
+    subplot(421)
     title("Temporal layer spikes")
     plot(u_spike_mon.t / ms, u_spike_mon.i, '.k')
     xlabel('Time (ms)')
     ylabel('Neuron index')
     grid(True)
     xticks(np.arange(0.0, simulation_time + step, step))
-    yticks(np.arange(-1, N+1, 1))
+    yticks(np.arange(-1, N + 1, 1))
 
-    subplot(322)
+    subplot(422)
     title("Inhibition neuron spikes")
     plot(inh_spike_mon.t / ms, inh_spike_mon.i, '.k')
     xlabel('Time (ms)')
@@ -177,7 +235,7 @@ if __name__ == "__main__":
     xticks(np.arange(0.0, simulation_time + step, step))
     yticks(np.arange(-1, 1, 1))
 
-    subplot(323)
+    subplot(423)
     title("u membrane potential")
     for item in u_state_mon_v:
         plot(u_state_mon_v.t / ms, item.v)
@@ -186,14 +244,14 @@ if __name__ == "__main__":
     ylabel('Potential')
     xticks(np.arange(0.0, simulation_time + step, step))
 
-    subplot(324)
+    subplot(424)
     title("Inhibition neuron membrane potential")
     plot(inh_state_mon.t / ms, inh_state_mon[0].v)
     xlabel('Time (ms)')
     ylabel('Potential')
     xticks(np.arange(0.0, simulation_time + step, step))
 
-    subplot(325)
+    subplot(425)
     title("Excitation/inhibition interaction")
     plot(w_exc_neu_state.t / ms, w_exc_neu_state[0].w_exc, w_exc_neu_state.t / ms, w_inh_neu_state[0].w_inh,
          w_exc_neu_state.t / ms, w_exc_neu_state[0].w_exc - w_inh_neu_state[0].w_inh)
@@ -201,13 +259,28 @@ if __name__ == "__main__":
     ylabel('Potential')
     xticks(np.arange(0.0, simulation_time + step, step))
 
-    subplot(326)
+    subplot(426)
     title("Inhibition to u potential")
     plot(u_state_mon_w.t / ms, u_state_mon_w[0].w_inh2u)
     xlabel('Time (ms)')
     ylabel('Potential')
     xticks(np.arange(0.0, simulation_time + step, step))
 
+    subplot(427)
+    title("Synaptic Weight")
+    for item in w_syn_u2inh_exc:
+        plot(w_syn_u2inh_exc.t / ms, item.w_syn)
+    xlabel('Time (ms)')
+    ylabel('Potential')
+    xticks(np.arange(0.0, simulation_time + step, step))
+    yticks(np.arange(-0.1, 1.1, 0.1))
+
+    subplot(428)
+    title("Synaptic time pre spike")
+    for item in u_state_mon_rr:
+        plot(w_syn_u2inh_exc.t / ms, item.rr)
+    xlabel('Time (ms)')
+    ylabel('Potential')
+    xticks(np.arange(0.0, simulation_time + step, step))
+
     show()
-
-
