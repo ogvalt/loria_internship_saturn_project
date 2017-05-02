@@ -4,11 +4,11 @@ from brian2 import *
 
 class ReceptiveField:
     # Parameter that used in standard deviation definition
-    gamma = 1.
+    gamma = 0.8
 
     def __init__(self, bank_size=10, I_min=0.0, I_max=1.0):
         self.bank_size = bank_size
-        self.field_mu = np.array([(I_min + ((2 * i - 3) / 2) * ((I_max - I_min) / (bank_size - 2)))
+        self.field_mu = np.array([(I_min + ((2 * i - 2) / 2) * ((I_max - I_min) / (bank_size - 1)))
                                   for i in range(1, bank_size + 1)])
         self.field_sigma = (1.0 / self.gamma) * ((I_max - I_min))
 
@@ -20,7 +20,10 @@ class ReceptiveField:
             exit(1)
 
         temp = np.exp(-((input_vector - self.field_mu) ** 2) / (2 * self.field_sigma * self.field_sigma))
+        # temp += np.exp(-((input_vector - 1 - self.field_mu) ** 2) / (2 * self.field_sigma * self.field_sigma))
+        # temp += np.exp(-((input_vector + 1 - self.field_mu) ** 2) / (2 * self.field_sigma * self.field_sigma))
         temp = temp.astype(np.float16)
+
         return temp
 
 
@@ -40,20 +43,17 @@ class ReceptiveField:
 
 
 if __name__ == "__main__":
-    rf = ReceptiveField()
+    rf = ReceptiveField(I_min=0.05, I_max=0.95)
+    print(rf.field_mu)
     # vect = np.array([0.15, 0.07, 0.1])
     #
     # print(rf.float_to_membrane_potential(vect))
+    # inputs = np.random.rand(3)
     inputs = np.array([0.40, 0.95, 0.77])
-    inputs = np.array([0.4])
-    random_sequence = np.array([0.56431847, 0.88662475, 0.46637221, 0.86791681, 0.45770412,
-                                0.43807465, 0.54490613, 0.74294809, 0.79951500, 0.55794921,
-                                0.42337986, 0.37427021, 0.79028469, 0.81061864, 0.27765872,
-                                0.19199684, 0.26997830, 0.23755365, 0.43877926, 0.45280514,
-                                0.53461819, 0.45465584, 0.35832316, 0.49497293, 0.76410138,
-                                0.97565988, 0.41807296, 0.94778919, 0.52665305, 0.73782955])
+    # inputs = np.array([0.4])
+    np.random.seed(seed=1)
 
-    N = 10
+    N = 30
     time_step = 0.01
 
     A_plus = 0.0016
@@ -152,7 +152,7 @@ if __name__ == "__main__":
                                 ''')
     u2inh_excitation.connect(i=np.arange(N), j=0)
     # u2inh_excitation.w_syn = 'rand() * w_syn_u2inh_exc_max'
-    u2inh_excitation.w_syn = random_sequence[0:10] * w_syn_u2inh_exc_max
+    u2inh_excitation.w_syn = np.random.rand(N) * w_syn_u2inh_exc_max
 
     # v to inh neuron, inhibition connection
     u2inh_inhibition = Synapses(temporal_layer, target=inhibition_neuron, method=diff_method,
@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
     u2inh_inhibition.connect(i=np.arange(N), j=0)
     # u2inh_inhibition.w_syn = 'rand() * w_syn_u2inh_inh_max'
-    u2inh_inhibition.w_syn = random_sequence[10:20] * w_syn_u2inh_inh_max
+    u2inh_inhibition.w_syn = np.random.rand(N) * w_syn_u2inh_inh_max
     # inh neuron to v, inhibition connection
     inh2u_inhibition = Synapses(inhibition_neuron, target=temporal_layer, method=diff_method,
                                 on_pre='''
@@ -190,7 +190,103 @@ if __name__ == "__main__":
                                 ''')
     inh2u_inhibition.connect(i=0, j=np.arange(N))
     # inh2u_inhibition.w_syn = 'rand() * w_syn_inh2u_max'
-    inh2u_inhibition.w_syn = random_sequence[21] * w_syn_inh2u_max
+    inh2u_inhibition.w_syn = np.random.rand(1) * w_syn_inh2u_max
+
+    tau_r_afferent = 0.2 * ms
+    tau_f_afferent = 1.0 * ms
+
+    tau_r_lateral = 0.1 * ms
+    tau_f_lateral = 0.5 * ms
+
+    tau_m_som = 1.0 * ms
+
+    equ_som = '''
+            dglobal_time/dt = 1 / ms : 1
+            drr/dt = 1 / ms : 1
+
+            # Afferent connection (from temporal layer to som layer)
+            
+            ds_afferent/dt = (-s_afferent)/tau_r_afferent: 1
+            dw_afferent/dt = (s_afferent - w_afferent)/tau_f_afferent: 1 
+
+            # lateral connection
+
+            ds_lateral/dt = (-s_lateral)/tau_r_lateral: 1
+            dw_lateral/dt = (s_lateral - w_lateral)/tau_f_lateral: 1
+
+            # membrane potential of u layer
+
+            dv/dt = (-v + w_lateral + w_afferent) / tau_m_som: 1
+        '''
+
+    map_size = 10
+
+    teta_som = 1.0
+    teta_reset_som = 0.0
+
+    w_syn_temporal_to_som_max = 2.2
+    w_syn_som_to_som_max = 1.0
+
+    X = 3.0
+    X_ = 3.0
+    T = 1.0
+    power_n = 1.0
+    a = 3.0
+    b = 3.0
+    pi = np.pi
+
+    som_layer = NeuronGroup(map_size * map_size, equ_som, threshold='v>teta_som', method=diff_method,
+                            reset='''v = teta_reset_som; rr = 0''')
+
+    som_synapse = Synapses(som_layer, target=som_layer, method=diff_method,
+                           on_pre='''
+                           radius = X - (X - X_)/(1+(2**0.5 - 1)*((T/global_time)**(2 * power_n)))
+                           
+                           y_pre = floor(i / map_size)
+                           x_pre = i - y_pre * map_size
+                           
+                           y_post = floor(j/map_size)
+                           x_post = j - y_post * map_size
+                            
+                           dist = (x_post - x_pre)**2 + (y_post - y_pre)**2
+                           
+                           G1 = (1 + a) * exp(- dist/(radius**2)) / (2 * pi * radius**2)
+                           G2 = a * exp(- dist/(b * radius)**2) / (2 * pi * (b * radius)**2)
+                           
+                           w_syn = clip(G1 + G2, 0, w_syn_som_to_som_max)
+                           s_lateral += w_syn
+                           ''',
+                           on_post='''
+                           ''',
+                           model='''
+                           w_syn : 1 # synaptic weight / synapse efficacy
+                           ''')
+    som_synapse.connect(condition='i!=j')
+    # som_synapse.w_syn = 'rand() * w_syn_som_to_som_max'
+
+    temporal_to_som_synapse = Synapses(temporal_layer, target=som_layer, method=diff_method,
+                                       on_pre='''
+                                       s_afferent += w_syn
+                                       Apre = (- w_syn) * A_minus * (1 - 1/tau_minus) ** rr_post
+                                       w_syn = clip(w_syn + plasticity * Apre, 0,  w_syn_temporal_to_som_max)
+                                       ''',
+                                       on_post='''
+                                       Apost = exp(-w_syn) * A_plus * (1 - 1/tau_plus) * rr_pre
+                                       w_syn = clip(w_syn + plasticity * Apost, 0,  w_syn_temporal_to_som_max)
+                                       ''',
+                                       model='''
+                                       w_syn : 1 # synaptic weight / synapse efficacy
+                                       plasticity : boolean (shared)
+                                       ''')
+
+    temporal_to_som_synapse.connect()
+    # temporal_to_som_synapse.w_syn = 'rand() * w_syn_temporal_to_som_max'
+
+    temporal_to_som_synapse.w_syn = np.random.rand(3000) * w_syn_som_to_som_max
+
+    # Visualization
+
+    som_spike_mon = SpikeMonitor(som_layer)
 
     u_spike_mon = SpikeMonitor(temporal_layer)
     u_state_mon_v = StateMonitor(temporal_layer, 'v', record=True)
@@ -206,7 +302,7 @@ if __name__ == "__main__":
 
     defaultclock.dt = time_step * ms
 
-    simulation_time = 4
+    simulation_time = 40
     step = 0.2
 
     plasticity_state = True
@@ -214,10 +310,12 @@ if __name__ == "__main__":
     u2inh_excitation.plasticity = plasticity_state
     u2inh_inhibition.plasticity = plasticity_state
     inh2u_inhibition.plasticity = plasticity_state
+    temporal_to_som_synapse.plasticity = plasticity_state
 
     run(simulation_time * ms, report='text')
 
     subplot(421)
+    # subplot(111)
     title("Temporal layer spikes")
     plot(u_spike_mon.t / ms, u_spike_mon.i, '.k')
     xlabel('Time (ms)')
@@ -225,6 +323,8 @@ if __name__ == "__main__":
     grid(True)
     xticks(np.arange(0.0, simulation_time + step, step))
     yticks(np.arange(-1, N + 1, 1))
+
+    # show()
 
     subplot(422)
     title("Inhibition neuron spikes")
@@ -282,5 +382,16 @@ if __name__ == "__main__":
     xlabel('Time (ms)')
     ylabel('Potential')
     xticks(np.arange(0.0, simulation_time + step, step))
+
+    show()
+
+    # subplot(111)
+    title("Som layer spikes")
+    plot(som_spike_mon.t / ms, som_spike_mon.i, '.k')
+    xlabel('Time (ms)')
+    ylabel('Neuron index')
+    grid(True)
+    xticks(np.arange(0.0, simulation_time + step, step))
+    yticks(np.arange(-1, map_size * map_size + 1, 1))
 
     show()
