@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 
 <head>
     <title>Spiking SOM Visualization</title>
@@ -14,7 +14,7 @@
 
 <body>
     <div class="container">
-        <form>
+        <form action="model_parameter" method="post">
             <div class="row" id="a_table">
                 <h4>
                     <p class="text-center">
@@ -25,53 +25,53 @@
             <div class="row">
                 <div class="col-md-2 col-md-offset-1">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="time_step">Time step</label>
+                        <input type="text" class="form-control" id="time_step" name="time_step" value="0.01">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_m">&tau;<sub>m</sub>u (ms)</label>
+                        <input type="text" class="form-control" id="tau_m" name="tau_m" value="1">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_m_inh">&tau;<sub>m</sub>Inh,u (ms)</label>
+                        <input type="text" class="form-control" id="tau_m_inh" name="tau_m_inh" value="0.5">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_m_som">&tau;<sub>m</sub>v(ms)</label>
+                        <input type="text" class="form-control" id="tau_m_som" name="tau_m_som" value="1">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="theta_reset_u">&theta;<sub>reset</sub>u</label>
+                        <input type="text" class="form-control" id="theta_reset_u" name="theta_reset_u" value="-0.5">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="theta_reset_inh">&theta;<sub>reset</sub>inh</label>
+                        <input type="text" class="form-control" id="theta_reset_inh" name="theta_reset_inh" value="-0.1">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="theta_reset_som">&theta;<sub>reset</sub>som</label>
+                        <input type="text" class="form-control" id="theta_reset_som" name="theta_reset_som" value="0.0">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="theta_u">&theta;<sub>u</sub></label>
+                        <input type="text" class="form-control" id="theta_u" name="theta_u" value="0.5">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="theta_u_inh">&theta;<sub>inh</sub></label>
+                        <input type="text" class="form-control" id="theta_u_inh" name="theta_u_inh" value="0.01">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="theta_som">&theta;<sub>v</sub></label>
+                        <input type="text" class="form-control" id="theta_som" name="theta_som" value="1.0">
+                    </div>
                 </div>
             </div>
             <div class="row" id="b_table">
@@ -84,53 +84,53 @@
             <div class="row">
                 <div class="col-md-2 col-md-offset-1">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_r_afferent">&tau;<sub>r</sub> u,v(ms)</label>
+                        <input type="text" class="form-control" id="tau_r_afferent" name="tau_r_afferent"value="0.2">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_f_afferent">&tau;<sub>f</sub> u,v(ms)</label>
+                        <input type="text" class="form-control" id="tau_f_afferent" name="tau_f_afferent"value="1.0">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_r_exc">&tau;<sub>r</sub> u,inh(exc)</label>
+                        <input type="text" class="form-control" id="tau_r_exc" name="tau_r_exc" value="0.4">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_f_exc">&tau;<sub>f</sub> u,inh(exc)</label>
+                        <input type="text" class="form-control" id="tau_f_exc" name="tau_f_exc" value="2.0">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_r_inh">&tau;<sub>r</sub> u,inh(inh)</label>
+                        <input type="text" class="form-control" id="tau_r_inh" name="tau_r_inh" value="0.2">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_f_inh">&tau;<sub>f</sub> u,inh(inh)</label>
+                        <input type="text" class="form-control" id="tau_f_inh" name="tau_f_inh" value="1.0">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_r_inh2u">&tau;<sub>r</sub> inh,u</label>
+                        <input type="text" class="form-control" id="tau_r_inh2u" name="tau_r_inh2u" value="1.0">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_f_inh2u">&tau;<sub>f</sub> inh,u</label>
+                        <input type="text" class="form-control" id="tau_f_inh2u" name="tau_f_inh2u" value="5.0">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_r_lateral">&tau;<sub>r</sub> v,v</label>
+                        <input type="text" class="form-control" id="tau_r_lateral" name="tau_r_lateral" value="0.4">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-                      </div>
+                        <label for="tau_f_lateral">&tau;<sub>f</sub> v,v</label>
+                        <input type="text" class="form-control" id="tau_f_lateral" name="tau_f_lateral" value="2.0">
+                    </div>
                 </div>
             </div>
             <div class="row" id="c_table">
@@ -143,32 +143,32 @@
             <div class="row">
                 <div class="col-md-2 col-md-offset-1">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="w_syn_temporal_to_som_max">w<sub>max</sub> u,v</label>
+                        <input type="text" class="form-control" id="w_syn_temporal_to_som_max" name="w_syn_temporal_to_som_max" value="2.2">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="w_syn_u2inh_exc_max">w<sub>max</sub> u,inh(exc)</label>
+                        <input type="text" class="form-control" id="w_syn_u2inh_exc_max" name="w_syn_u2inh_exc_max" value="1.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="w_syn_u2inh_inh_max">w<sub>max</sub> u,inh(inh)</label>
+                        <input type="text" class="form-control" id="w_syn_u2inh_inh_max" name="w_syn_u2inh_inh_max" value="1.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="w_syn_inh2u_max">w<sub>max</sub> inh,u</label>
+                        <input type="text" class="form-control" id="w_syn_inh2u_max" name="w_syn_inh2u_max" value="100.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="w_syn_som_to_som_max">w<sub>max</sub> v,v</label>
+                        <input type="text" class="form-control" id="w_syn_som_to_som_max" name="w_syn_som_to_som_max" value="1.0">
                     </div>
                 </div>
             </div>
@@ -182,26 +182,26 @@
             <div class="row">
                 <div class="col-md-2 col-md-offset-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="a">a</label>
+                        <input type="text" class="form-control" id="a" name="a" value="3.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="b">b</label>
+                        <input type="text" class="form-control" id="b" name="b" value="3.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="X">X</label>
+                        <input type="text" class="form-control" id="X" name="X" value="3.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="X_">X`</label>
+                        <input type="text" class="form-control" id="X_" name="X_" value="3.0">
                     </div>
                 </div>
             </div>
@@ -215,26 +215,26 @@
             <div class="row">
                 <div class="col-md-2 col-md-offset-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="A_plus">A<sub>+</sub></label>
+                        <input type="text" class="form-control" id="A_plus" name="A_plus" value="0.0016">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="A_minus">A<sub>-</sub></label>
+                        <input type="text" class="form-control" id="A_minus" name="A_minus" value="0.0055">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_plus">&tau;<sub>+</sub> (ms)</label>
+                        <input type="text" class="form-control" id="tau_plus" name="tau_plus" value="11">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="tau_minus">&tau;<sub>-</sub> (ms)</label>
+                        <input type="text" class="form-control" id="tau_minus" name="tau_minus" value="10">
                     </div>
                 </div>
             </div>
@@ -246,42 +246,33 @@
                 </h4>
             </div>
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="T">T used in(7)</label>
+                        <input type="text" class="form-control" id="T" name="T" value="1.0">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="power_n">n used in (6)</label>
+                        <input type="text" class="form-control" id="power_n" name="power_n" value="1.0">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="map_size">Map size</label>
+                        <input type="text" class="form-control" id="map_size" name="map_size" value="10">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
+                        <label for="simulation_time">Simulation time</label>
+                        <input type="text" class="form-control" id="simulation_time" name="simulation_time" value="4">
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
-                    </div>
-                </div>
+            </div>
+            <div class="row" id="submit_button">
+                <input class="btn btn-primary btn-lg btn-block" type="submit" value="Submit">
             </div>
         </form>
     </div>

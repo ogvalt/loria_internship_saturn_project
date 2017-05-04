@@ -4,9 +4,10 @@
 
 var res;
 
-function get_message(){
-    $.get('/get_text', function(data){
+function get_data_for_plot(){
+    $.get('/get_data_for_plot', function(data){
         res = data;
+        console.log(res);
     });
 };
 
