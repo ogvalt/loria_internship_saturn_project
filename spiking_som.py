@@ -85,6 +85,7 @@ if __name__ == "__main__":
     pi = np.pi
     # size of the self-organizing map
     map_size = 10
+    simulation_time = 4
 
     temporal_layer_neuron_equ = '''
         dtime/dt = 1 / ms : 1
@@ -264,7 +265,6 @@ if __name__ == "__main__":
 
     defaultclock.dt = time_step * ms
 
-    simulation_time = 4
     step = 0.2
 
     plasticity_state = True
