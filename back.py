@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect
 from spiking_som import *
+import numpy as np
 
 app = Flask(__name__)
 
@@ -10,11 +11,13 @@ def main():
 
 @app.route('/get_data_for_plot', methods=['GET', 'POST'])
 def get_text():
-    a = model.u_spike_mon.t[:] / ms
+    # time
+    a = np.around(model.u_spike_mon.t[:] / ms, decimals=5)
     # print(a)
-    b = model.u_spike_mon.i[:]
+    # spike
+    b = np.around(model.u_spike_mon.i[:], decimals=5)
     # print(b)
-    return jsonify({'time': a.tolist(), 'neuron': b.tolist()})
+    return jsonify({'x': a.tolist(), 'y': b.tolist()})
 
 
 @app.route('/model_parameter', methods=['POST'])

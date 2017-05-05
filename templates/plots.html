@@ -5,13 +5,59 @@
     <title>Plots</title>
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
-    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='rickshaw.css') }}">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='app.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='rickshaw.js') }}"></script>
 </head>
 <body>
     <div class="container">
-        <button type="button" class="btn btn-primary btn-lg btn-block" onclick="get_data_for_plot()">Plot</button>
+        <div class="row">
+            <button type="button" class="btn btn-primary btn-lg btn-block" onclick="get_data_for_plot()">Plot</button>
+        </div>
+        <div class="row">
+            <div id="chart"></div>
+        </div>
     </div>
+    <script>
+
+//        var seriesData = [ [0,1,2], [3,4,5], [0,1,2], [3,4,5], [0,1,2] ];
+//        var random = new Rickshaw.Fixtures.RandomData(50);
+//
+//        for (var i = 0; i < 75; i++) {
+//            random.addData(seriesData);
+//        }
+
+
+
+//        var slider = new Rickshaw.Graph.RangeSlider.Preview({
+//            graph: graph,
+//            element: document.querySelector('#slider')
+//        });
+
+
+
+//        var detail = new Rickshaw.Graph.HoverDetail({
+//            graph: graph
+//        });
+//
+//        var legend = new Rickshaw.Graph.Legend({
+//            graph: graph,
+//            element: document.querySelector('#legend')
+//        });
+//
+//        var highlighter = new Rickshaw.Graph.Behavior.Series.Highlight({
+//            graph: graph,
+//            legend: legend,
+//            disabledColor: function() { return 'rgba(0, 0, 0, 0.2)' }
+//        });
+//
+//        var highlighter = new Rickshaw.Graph.Behavior.Series.Toggle({
+//            graph: graph,
+//            legend: legend
+//        });
+    </script>
+
 </body>
 </html>

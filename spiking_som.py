@@ -1,4 +1,4 @@
-import numpy as np
+
 from brian2 import *
 
 
