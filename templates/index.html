@@ -1,20 +1,26 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Spiking SOM Visualization</title>
-
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
-    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css">
+
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
+
     <script type="text/javascript" src="{{ url_for('static', filename='app.js') }}"></script>
 
 </head>
-
 <body>
-    <div class="container">
-        <form action="model_parameter" method="post">
+    <div id="mySidenav" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <div class="container">
+        <form action="model_parameter" id="form">
             <div class="row" id="a_table">
                 <h4>
                     <p class="text-center">
@@ -272,10 +278,22 @@
                 </div>
             </div>
             <div class="row" id="submit_button">
-                <input class="btn btn-primary btn-lg btn-block" type="submit" value="Submit">
+                <input class="btn btn-primary btn-lg center-block" type="submit" value="Submit">
+                <h4>
+                    <p class="text-center">
+                    Window will close automatically after simulation has been completed
+                    </p>
+                </h4>
             </div>
         </form>
     </div>
-</body>
+    </div>
+    <!-- Use any element to open the sidenav -->
+    <span class = "btn btn-primary" id="parameter_button" onclick="openNav()">Parameters</span>
+    <div class="container" id="main">
+        <div class="row" id="chart_container" style="padding-top: 20px;"></div>
+    </div>
 
+
+</body>
 </html>

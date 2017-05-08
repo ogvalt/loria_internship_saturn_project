@@ -9,15 +9,41 @@ def main():
     return render_template('index.html')
 
 
-@app.route('/get_data_for_plot', methods=['GET', 'POST'])
-def get_text():
-    # time
-    a = np.around(model.u_spike_mon.t[:] / ms, decimals=5)
-    # print(a)
-    # spike
-    b = np.around(model.u_spike_mon.i[:], decimals=5)
-    # print(b)
-    return jsonify({'x': a.tolist(), 'y': b.tolist()})
+@app.route('/temporal_spikes', methods=['GET', 'POST'])
+def temporal_layer_spikes_get():
+    time = np.around(model.u_spike_mon.t[:] / ms, decimals=5)
+    spike = np.around(model.u_spike_mon.i[:], decimals=5)
+    return jsonify({'x': time.tolist(), 'y': spike.tolist()})
+
+
+@app.route('/som_spike', methods=['GET', 'POST'])
+def som_layer_spike_get():
+    time = np.around(model.som_spike_mon.t[:] / ms, decimals=5)
+    spike = np.around(model.som_spike_mon.i[:], decimals=5)
+    return jsonify({'x': time.tolist(), 'y': spike.tolist()})
+
+
+@app.route('/inh_spike', methods=['GET', 'POST'])
+def inh_neuron_spike_get():
+    time = np.around(model.inh_spike_mon.t[:] / ms, decimals=5)
+    spike = np.around(model.inh_spike_mon.i[:], decimals=5)
+    return jsonify({'x': time.tolist(), 'y': spike.tolist()})
+
+
+@app.route('/membrane_potential_temporal_layer', methods=['GET', 'POST'])
+def potential_temporal_layer_get():
+    time = np.around(model.u_state_mon_v.t[:] / ms, decimals=5)
+    potential = np.around(model.u_state_mon_v.v[:], decimals=5)
+    time_list = ['time']
+    time_list.extend(time.tolist())
+    temp_list = [time_list]
+    i = 0
+    for item in potential:
+        neuron_list = ['neuron ' + str(i)]
+        neuron_list.extend(item.tolist())
+        temp_list.append(neuron_list)
+        i += 1
+    return jsonify({'data': temp_list})
 
 
 @app.route('/model_parameter', methods=['POST'])
@@ -72,7 +98,7 @@ def model_param():
     model.map_size = float(request.form['map_size'])
     model.simulation_time = float(request.form['simulation_time'])
     model.run_simulation()
-    return render_template('plots.html')
+    return jsonify("Ok!")
 
 if __name__ == '__main__':
     app.run()
