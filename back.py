@@ -32,17 +32,15 @@ def inh_neuron_spike_get():
 
 @app.route('/membrane_potential_temporal_layer', methods=['GET', 'POST'])
 def potential_temporal_layer_get():
+    print(request)
     time = np.around(model.u_state_mon_v.t[:] / ms, decimals=5)
-    potential = np.around(model.u_state_mon_v.v[:], decimals=5)
+    potential = np.around(model.u_state_mon_v[int(request.args['number'])].v[:], decimals=5)
     time_list = ['time']
     time_list.extend(time.tolist())
     temp_list = [time_list]
-    i = 0
-    for item in potential:
-        neuron_list = ['neuron ' + str(i)]
-        neuron_list.extend(item.tolist())
-        temp_list.append(neuron_list)
-        i += 1
+    neuron_list = ['neuron ' + request.args['number']]
+    neuron_list.extend(potential.tolist())
+    temp_list.append(neuron_list)
     return jsonify({'data': temp_list})
 
 

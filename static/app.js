@@ -15,6 +15,7 @@ $(document).ready(function() {
             console.log(res);
             closeNav();
             setTimeout( plot, 500);
+            setTimeout(add_plot_controls, 1000);
             // Don't forget to hide the loading indicator!
         });
     return false; // prevent default action
@@ -194,23 +195,15 @@ function plot_inh_layer_spikes(){
 
 };
 
-function plot_temporal_layer_potential(){
-    $.get('/membrane_potential_temporal_layer', function(data){
+function plot_temporal_layer_potential(data){
+    $.get('/membrane_potential_temporal_layer', {number: data}, function(data){
         // console.log(data);
 
-        // $("<div>", {id: 'membrane_potential_temporal_layer'}).appendTo('#chart_container');
-        $("<div>", {id: 'membrane_potential_temporal_layer_chart1'}).appendTo('#chart_container');
-        $("<div>", {id: 'membrane_potential_temporal_layer_chart2'}).appendTo('#chart_container');
-        $("<div>", {id: 'membrane_potential_temporal_layer_chart3'}).appendTo('#chart_container');
-
-        var range1 = data['data'].slice(0,10)
-        var range2 = data['data'].slice(10,20)
-        range2.push(range1[0]);
-        var range3 = data['data'].slice(20,30)
-        range3.push(range1[0]);
+        $("<div>", {id: 'membrane_potential_temporal_layer_chart'}).appendTo('#membrane_potential_temporal_layer').
+        addClass('col-md-12');
 
         var chart1 = c3.generate({
-            bindto: '#membrane_potential_temporal_layer_chart1',
+            bindto: '#membrane_potential_temporal_layer_chart',
             size: {
                 height: 600
             },
@@ -219,7 +212,7 @@ function plot_temporal_layer_potential(){
             },
             data: {
                 x: 'time',
-                columns: range1
+                columns: data['data']
             },
             axis: {
                 x: {
@@ -243,76 +236,6 @@ function plot_temporal_layer_potential(){
             subchart: {show: true}
         });
         chart1.axis.range({min:{x:0.0}, max:{x: simulation_time}});
-
-        var chart2 = c3.generate({
-            bindto: '#membrane_potential_temporal_layer_chart2',
-            size: {
-                height: 600
-            },
-            title: {
-              text: 'Temporal layer membrane potential'
-            },
-            data: {
-                x: 'time',
-                columns: range2
-            },
-            axis: {
-                x: {
-                    tick: {
-                        values: function () {
-                            return d3.range(0, simulation_time + 1, 1);
-                        }
-                    }
-                },
-            },
-            tooltip: {
-                format: {
-                    title: function (d) { return 'Time ' + d + "ms"; },
-                    // value: function (value, ratio, id) { return value;}
-                }
-            },
-            grid: {
-                x: {show: true},
-                y: {show: true}
-            },
-            subchart: {show: true}
-        });
-        chart2.axis.range({min:{x:0.0}, max:{x: simulation_time}});
-
-        var chart3 = c3.generate({
-            bindto: '#membrane_potential_temporal_layer_chart3',
-            size: {
-                height: 600
-            },
-            title: {
-              text: 'Temporal layer membrane potential'
-            },
-            data: {
-                x: 'time',
-                columns: range3
-            },
-            axis: {
-                x: {
-                    tick: {
-                        values: function () {
-                            return d3.range(0, simulation_time + 1, 1);
-                        }
-                    }
-                },
-            },
-            tooltip: {
-                format: {
-                    title: function (d) { return 'Time ' + d + "ms"; },
-                    // value: function (value, ratio, id) { return value;}
-                }
-            },
-            grid: {
-                x: {show: true},
-                y: {show: true}
-            },
-            subchart: {show: true}
-        });
-        chart3.axis.range({min:{x:0.0}, max:{x: simulation_time}});
     });
 
 };
@@ -321,7 +244,26 @@ function plot(){
     plot_temporal_layer_spikes();
     plot_som_layer_spikes();
     plot_inh_layer_spikes();
-    plot_temporal_layer_potential();
+}
+
+function add_plot_controls(){
+    $("<div>", {id: 'membrane_potential_temporal_layer'}).appendTo('#chart_container');
+    var html_str = '<div class="col-md-10">' +
+                '<select class="form-control" id="temporal_selector">';
+
+    for (var i = 0; i < 30; i++){
+        html_str += '<option>' + (i + 1) + '</option>';
+    }
+    html_str += '</select> </div>' +
+            '<div class="col-md-2">' +
+                '<button type="button" class="btn btn-primary btn-block" id="plot_temporal">Plot</button>' +
+            '</div>';
+    $("#membrane_potential_temporal_layer").append(html_str);
+
+    $('#plot_temporal').click(function(){
+        var number = parseInt($("#temporal_selector option:selected").text());
+        plot_temporal_layer_potential(number);
+    });
 }
 
 
