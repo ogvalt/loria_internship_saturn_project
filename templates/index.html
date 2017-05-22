@@ -12,6 +12,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
 
     <script type="text/javascript" src="{{ url_for('static', filename='app.js') }}"></script>
 
@@ -36,17 +37,17 @@
                     </div>
                     <div class="form-group">
                         <label for="tau_m">&tau;<sub>m</sub>u (ms)</label>
-                        <input type="text" class="form-control" id="tau_m" name="tau_m" value="1">
+                        <input type="text" class="form-control" id="tau_m" name="tau_m" value="10.0">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="tau_m_inh">&tau;<sub>m</sub>Inh,u (ms)</label>
-                        <input type="text" class="form-control" id="tau_m_inh" name="tau_m_inh" value="0.5">
+                        <input type="text" class="form-control" id="tau_m_inh" name="tau_m_inh" value="5">
                     </div>
                     <div class="form-group">
                         <label for="tau_m_som">&tau;<sub>m</sub>v(ms)</label>
-                        <input type="text" class="form-control" id="tau_m_som" name="tau_m_som" value="1">
+                        <input type="text" class="form-control" id="tau_m_som" name="tau_m_som" value="3">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -56,7 +57,7 @@
                     </div>
                     <div class="form-group">
                         <label for="theta_reset_inh">&theta;<sub>reset</sub>inh</label>
-                        <input type="text" class="form-control" id="theta_reset_inh" name="theta_reset_inh" value="-0.1">
+                        <input type="text" class="form-control" id="theta_reset_inh" name="theta_reset_inh" value="0.0">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -131,11 +132,11 @@
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="tau_r_lateral">&tau;<sub>r</sub> v,v</label>
-                        <input type="text" class="form-control" id="tau_r_lateral" name="tau_r_lateral" value="0.4">
+                        <input type="text" class="form-control" id="tau_r_lateral" name="tau_r_lateral" value="0.1">
                     </div>
                     <div class="form-group">
                         <label for="tau_f_lateral">&tau;<sub>f</sub> v,v</label>
-                        <input type="text" class="form-control" id="tau_f_lateral" name="tau_f_lateral" value="2.0">
+                        <input type="text" class="form-control" id="tau_f_lateral" name="tau_f_lateral" value="0.5">
                     </div>
                 </div>
             </div>
@@ -252,28 +253,34 @@
                 </h4>
             </div>
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-2 col-md-offset-1">
                     <div class="form-group">
                         <label for="T">T used in(7)</label>
                         <input type="text" class="form-control" id="T" name="T" value="1.0">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="power_n">n used in (6)</label>
                         <input type="text" class="form-control" id="power_n" name="power_n" value="1.0">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="map_size">Map size</label>
                         <input type="text" class="form-control" id="map_size" name="map_size" value="10">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="simulation_time">Simulation time</label>
                         <input type="text" class="form-control" id="simulation_time" name="simulation_time" value="4">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="attemps">Number of attempts</label>
+                        <input type="text" class="form-control" id="attemps" name="attemps" value="1">
                     </div>
                 </div>
             </div>

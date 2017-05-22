@@ -1,11 +1,15 @@
 from flask import Flask, render_template, jsonify, request, redirect
 from spiking_som import *
+from dataset import ArtificialDataSet
 import numpy as np
 
 app = Flask(__name__)
 
 @app.route('/')
 def main():
+    global dataset
+    dataset = ArtificialDataSet(100, 3)
+    dataset = dataset.generate_set()
     return render_template('index.html')
 
 
@@ -46,8 +50,15 @@ def potential_temporal_layer_get():
 
 @app.route('/model_parameter', methods=['POST'])
 def model_param():
-    global model
-    model = SpikingSOM()
+    try:
+        model
+    except:
+        global model
+    else:
+        del model
+        global model
+
+    model = SpikingSOM(dataset)
     model.time_step = float(request.form['time_step'])
     model.tau_m = float(request.form['tau_m']) * ms
     model.tau_m_inh = float(request.form['tau_m_inh']) * ms
@@ -75,7 +86,7 @@ def model_param():
     # (C) Maximum magnitudes of synaptic connection strength
     model.w_syn_temporal_to_som_max = float(request.form['w_syn_temporal_to_som_max'])
     model.w_syn_u2inh_exc_max = float(request.form['w_syn_u2inh_exc_max'])
-    model.w_syn_u2inh_inh_max = float(request.form['w_syn_u2inh_inh_max']    )
+    model.w_syn_u2inh_inh_max = float(request.form['w_syn_u2inh_inh_max'])
     model.w_syn_inh2u_max = float(request.form['w_syn_inh2u_max'])
     model.w_syn_som_to_som_max = float(request.form['w_syn_som_to_som_max'])
     # (D) Neighbourhood parameters, used in (6) and (7), for layer v (som)
@@ -95,6 +106,7 @@ def model_param():
     # size of the self-organizing map
     model.map_size = float(request.form['map_size'])
     model.simulation_time = float(request.form['simulation_time'])
+    model.attemps = int(request.form['attemps'])
     model.run_simulation()
     return jsonify("Ok!")
 

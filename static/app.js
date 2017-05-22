@@ -9,12 +9,12 @@ $(document).ready(function() {
     openNav();
     $('#form').submit(function(){
         json_form  = $(this).serializeArray();
-        simulation_time = parseFloat(json_form[36].value);
+        simulation_time = parseFloat(json_form[36].value) * parseFloat(json_form[37].value);
         $.post($(this).attr('action'), json_form, function(res){
             // Do something with the response `res`
             console.log(res);
             closeNav();
-            setTimeout( plot, 500);
+            setTimeout(plot, 500);
             setTimeout(add_plot_controls, 1000);
             // Don't forget to hide the loading indicator!
         });
@@ -247,6 +247,7 @@ function plot(){
 }
 
 function add_plot_controls(){
+    if (document.getElementById("membrane_potential_temporal_layer") != null) return;
     $("<div>", {id: 'membrane_potential_temporal_layer'}).appendTo('#chart_container');
     var html_str = '<div class="col-md-10">' +
                 '<select class="form-control" id="temporal_selector">';

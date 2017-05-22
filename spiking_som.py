@@ -30,7 +30,10 @@ class ReceptiveField:
 
 
 class SpikingSOM:
-    def __init__(self):
+    dataset = None
+
+    def __init__(self, dataset):
+        self.dataset = dataset
         # (A) Neuronal parameters, used in (1) and (4)
         self.time_step = 0.01
         self.tau_m = 1.0 * ms
@@ -80,6 +83,7 @@ class SpikingSOM:
         # size of the self-organizing map
         self.map_size = 10
         self.simulation_time = 4
+        self.attemps = 1
 
         self.som_spike_mon = None
         self.u_spike_mon = None
@@ -97,8 +101,9 @@ class SpikingSOM:
         self.som_state_mon_w_afferent = None
         self.som_state_mon_w_lateral = None
         self.w_syn_u2v_state = None
+        self.net_model = None
 
-    def run_simulation(self):
+    def model_create(self):
         np.random.seed(1)
         seed(1)
         np.set_printoptions(suppress=True)
@@ -106,13 +111,9 @@ class SpikingSOM:
         bank_size = 10
         diff_method = 'euler'
 
-        inputs = np.random.rand(3)
-        print(inputs)
-        N = inputs.shape[0] * bank_size
+        N = 3 * bank_size
 
         rf = ReceptiveField(bank_size=bank_size, I_min=0.05, I_max=0.95)
-        potential_input = rf.float_to_membrane_potential(inputs)
-        potential_input = potential_input.flatten()
 
         # TABLE 1
         # (A) Neuronal parameters, used in (1) and (4)
@@ -165,7 +166,6 @@ class SpikingSOM:
         pi = np.pi
         # size of the self-organizing map
         map_size = self.map_size
-        simulation_time = self.simulation_time
 
         temporal_layer_neuron_equ = '''
             dtime/dt = 1 / ms : 1
@@ -220,7 +220,6 @@ class SpikingSOM:
 
         temporal_layer = NeuronGroup(N, temporal_layer_neuron_equ, threshold='v>theta_u', method=diff_method,
                                      reset='''v = theta_reset_u; time = 0''')
-        temporal_layer.I_ext = potential_input
 
         # inhibition neuron
         inhibition_neuron = NeuronGroup(1, inhibition_neuron_equ, threshold='v>theta_u_inh', method=diff_method,
@@ -355,13 +354,25 @@ class SpikingSOM:
 
         defaultclock.dt = time_step * ms
 
-        plasticity_state = True
+        plasticity_state = False
         u2inh_excitation.plasticity = plasticity_state
         u2inh_inhibition.plasticity = plasticity_state
         inh2u_inhibition.plasticity = plasticity_state
-        temporal_to_som_synapse.plasticity = plasticity_state
+        temporal_to_som_synapse.plasticity = True
 
-        run(simulation_time * ms, report='text')
+        self.net_model = Network(collect())
+        # simulation_time = self.simulation_time
+        self.net_model.store()
+        # for item in self.dataset:
+        for it in range(self.attemps):
+            self.net_model.restore()
+            inputs = np.random.rand(3)
+            print(inputs)
+            potential_input = rf.float_to_membrane_potential(inputs)
+            potential_input = potential_input.flatten()
+            temporal_layer.I_ext = potential_input
+            self.net_model.run(self.simulation_time * ms, report='text')
+            self.net_model.store()
 
         self.som_spike_mon = som_spike_mon
         self.u_spike_mon = u_spike_mon
@@ -386,6 +397,9 @@ class SpikingSOM:
         self.som_state_mon_w_lateral = som_state_mon_w_lateral
         # u to v afferent connection
         self.w_syn_u2v_state = w_syn_u2v_state
+
+    def run_simulation(self):
+        self.model_create()
 
 
 if __name__ == "__main__":
@@ -458,7 +472,6 @@ if __name__ == "__main__":
     pi = np.pi
     # size of the self-organizing map
     map_size = 10
-    simulation_time = 100
 
     temporal_layer_neuron_equ = '''
         dtime/dt = 1 / ms : 1
@@ -646,6 +659,8 @@ if __name__ == "__main__":
     u2inh_inhibition.plasticity = plasticity_state
     inh2u_inhibition.plasticity = plasticity_state
     temporal_to_som_synapse.plasticity = True  # plasticity_state
+
+    simulation_time = 500
 
     run(simulation_time * ms, report='text')
 

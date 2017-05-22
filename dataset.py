@@ -1,7 +1,7 @@
 from os import listdir
 import concurrent.futures
 
-import cv2
+# import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -135,7 +135,31 @@ class DataSet:
         plt.show()
 
 
+class ArtificialDataSet:
+    """
+    Class that generate artificial data set with normal distribution
+    """
+
+    dataset = None
+
+    def __init__(self, size_of_set, dimentionality=3):
+        self.size = size_of_set
+        self.dim = dimentionality
+
+    def generate_set(self):
+        set1 = np.random.normal(loc=0.35, scale=0.35, size=(self.size, self.dim))
+        set2 = np.random.normal(loc=0.65, scale=0.35, size=(self.size, self.dim))
+        set3 = np.random.normal(loc=0.50, scale=0.65, size=(self.size, self.dim))
+
+        self.dataset = np.append(set1, set2, axis=0)
+        self.dataset = np.append(self.dataset, set3, axis=0)
+        np.random.shuffle(self.dataset)
+        self.dataset = self.dataset[0:self.size]
+
+        return self.dataset
+
+
 if __name__ == "__main__":
-    lol = DataSet()
-    data = lol.process_files()
-    lol.visualize_data()
+    lol = ArtificialDataSet(100, 3)
+    data = lol.generate_set()
+    print(data)
