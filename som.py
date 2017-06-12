@@ -63,30 +63,40 @@ class SOM:
         for i, j in np.ndindex(self.map_size):
             if i == 0:
                 if j == 0:
-                    self.connection_array.extend([np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i+1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j + 1])])
                 elif j == (self.map_size[1]-1):
-                    self.connection_array.extend([np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i+1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j - 1])])
                 else:
-                    self.connection_array.extend([np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
-                                                  np.array([j, j - 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i+1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j + 1]),
+                                                  np.array([i * row_size + j, i * row_size + j - 1])])
             elif i == (self.map_size[0]-1):
                 if j == 0:
-                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i-1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j + 1])])
                 elif j == (self.map_size[1]-1):
-                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i-1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j - 1])])
                 else:
-                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
-                                                  np.array([j, j - 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i-1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j + 1]),
+                                                  np.array([i * row_size + j, i * row_size + j - 1])])
             else:
                 if j == 0:
-                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
-                                                  np.array([j, (i+1) * row_size + j, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i-1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j + 1]),
+                                                  np.array([i * row_size + j, (i+1) * row_size + j])])
                 elif j == (self.map_size[1]-1):
-                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0]),
-                                                  np.array([j, (i+1) * row_size + j, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i-1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j - 1]),
+                                                  np.array([i * row_size + j, (i+1) * row_size + j])])
                 else:
-                    self.connection_array.extend([np.array([j, (i-1) * row_size + j, 1.0]), np.array([j, j + 1, 1.0]),
-                                                  np.array([j, (i+1) * row_size + j, 1.0]), np.array([j, j - 1, 1.0])])
+                    self.connection_array.extend([np.array([i * row_size + j, (i-1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j + 1]),
+                                                  np.array([i * row_size + j, (i+1) * row_size + j]),
+                                                  np.array([i * row_size + j, i * row_size + j - 1])])
 
         self.connection_array = np.array(self.connection_array)
 

@@ -1,6 +1,10 @@
 
 from brian2 import *
 
+from pyqtgraph.Qt import QtGui, QtCore
+import numpy as np
+import pyqtgraph as pg
+
 
 class ReceptiveField:
     # Parameter that used in standard deviation definition
@@ -93,13 +97,13 @@ if __name__ == "__main__":
     tau_minus = 10
 
     # used in (7)
-    T = 1.0;
-    power_n = 1.0
+    T = 10.0;
+    power_n = 2.0
     # used in (6)
     pi = np.pi
     # size of the self-organizing map
     map_size = 10
-    simulation_time = 100
+    simulation_time = 20
 
     temporal_layer_neuron_equ = '''
         dtime/dt = 1 / ms : 1
@@ -220,7 +224,7 @@ if __name__ == "__main__":
     # som lateral connection
     som_synapse = Synapses(som_layer, target=som_layer, method=diff_method,
                            on_pre='''
-                           radius = X - (X - X_)/(1+(2**0.5 - 1)*((T/global_time)**(2 * power_n)))
+                           radius = X - (X - X_)/(1+(2**0.5 - 1)*((global_time/T)**(2 * power_n)))
                            
                            y_pre = floor(i / map_size)
                            x_pre = i - y_pre * map_size
@@ -290,84 +294,153 @@ if __name__ == "__main__":
 
     run(simulation_time * ms, report='text')
 
-    subplot(421)
-    # subplot(111)
-    title("Temporal layer spikes")
-    plot(u_spike_mon.t / ms, u_spike_mon.i, '.k')
-    xlabel('Time (ms)')
-    ylabel('Neuron index')
-    grid(True)
-    xticks(np.arange(0.0, simulation_time + step, step))
-    yticks(np.arange(-1, N + 1, 1))
+    # visual
+    app = QtGui.QApplication([])
 
+    # win = QtGui.QMainWindow()
+
+    win = pg.GraphicsWindow(title="som")
+    win.resize(1000, 600)
+    win.setWindowTitle('brain')
+    # Enable antialiasing for prettier plots
+    pg.setConfigOptions(antialias=True)
+
+    p1 = win.addPlot(title="Region Selection")
+
+    p1.plot(u_spike_mon.t / ms, u_spike_mon.i[:], pen=None, symbol='o',
+            symbolPen=None, symbolSize=5, symbolBrush=(255, 255, 255, 255))
+    p1.showGrid(x=True, y=True)
+    lr = pg.LinearRegionItem([0, 10])
+    lr.setZValue(0)
+    p1.addItem(lr)
+    p2 = win.addPlot(title="Zoom on selected region")
+    p2.plot(u_spike_mon.t / ms, u_spike_mon.i[:], pen=None, symbol='o',
+            symbolPen=None, symbolSize=5, symbolBrush=(255, 255, 255, 255))
+    p2.showGrid(x=True, y=True)
+    def updatePlot():
+        p2.setXRange(*lr.getRegion(), padding=0)
+    def updateRegion():
+        lr.setRegion(p2.getViewBox().viewRange()[0])
+    lr.sigRegionChanged.connect(updatePlot)
+    p2.sigXRangeChanged.connect(updateRegion)
+    updatePlot()
+
+    win.nextRow()
+
+    p3 = win.addPlot(title="Region Selection")
+    p3.plot(som_spike_mon.t / ms, som_spike_mon.i[:], pen=None, symbol='o',
+            symbolPen=None, symbolSize=5, symbolBrush=(255, 255, 255, 255))
+    p3.showGrid(x=True, y=True)
+    lr1 = pg.LinearRegionItem([0, 10])
+    lr1.setZValue(0)
+    p3.addItem(lr1)
+    p4 = win.addPlot(title="Zoom on selected region")
+    p4.plot(som_spike_mon.t / ms, som_spike_mon.i[:], pen=None, symbol='o',
+            symbolPen=None, symbolSize=5, symbolBrush=(255, 255, 255, 255))
+    p4.showGrid(x=True, y=True)
+    def updatePlot2():
+        p4.setXRange(*lr1.getRegion(), padding=0)
+    def updateRegion2():
+        lr1.setRegion(p4.getViewBox().viewRange()[0])
+    lr1.sigRegionChanged.connect(updatePlot2)
+    p4.sigXRangeChanged.connect(updateRegion2)
+    updatePlot2()
+
+    u2som_syn_shape = temporal_to_som_synapse.w_syn[:].shape
+    picture = temporal_to_som_synapse.w_syn[:].reshape(30, int(u2som_syn_shape[0]/30))
+
+    win2 = QtGui.QMainWindow()
+    win2.resize(800, 800)
+    imv = pg.ImageView()
+    win2.setCentralWidget(imv)
+    win2.show()
+    win2.setWindowTitle("SOM weights")
+    imv.setImage(picture)
+
+
+    # subplot(421)
+    # # subplot(111)
+    # title("Temporal layer spikes")
+    # plot(u_spike_mon.t / ms, u_spike_mon.i, '.k')
+    # xlabel('Time (ms)')
+    # ylabel('Neuron index')
+    # grid(True)
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    # yticks(np.arange(-1, N + 1, 1))
+    #
+    # # show()
+    #
+    # subplot(422)
+    # title("Inhibition neuron spikes")
+    # plot(inh_spike_mon.t / ms, inh_spike_mon.i, '.k')
+    # xlabel('Time (ms)')
+    # ylabel('Neuron index')
+    # grid(True)
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    # yticks(np.arange(-1, 1, 1))
+    #
+    # subplot(423)
+    # title("u membrane potential")
+    # for item in u_state_mon_v:
+    #     plot(u_state_mon_v.t / ms, item.v)
+    # # plot(u_state_mon_v.t / ms, u_state_mon_v[0].v)
+    # xlabel('Time (ms)')
+    # ylabel('Potential')
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    #
+    # subplot(424)
+    # title("Inhibition neuron membrane potential")
+    # plot(inh_state_mon.t / ms, inh_state_mon[0].v)
+    # xlabel('Time (ms)')
+    # ylabel('Potential')
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    #
+    # subplot(425)
+    # title("Excitation/inhibition interaction")
+    # plot(w_exc_neu_state.t / ms, w_exc_neu_state[0].w_exc, w_exc_neu_state.t / ms, w_inh_neu_state[0].w_inh,
+    #      w_exc_neu_state.t / ms, w_exc_neu_state[0].w_exc - w_inh_neu_state[0].w_inh)
+    # xlabel('Time (ms)')
+    # ylabel('Potential')
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    #
+    # subplot(426)
+    # title("Inhibition to u potential")
+    # plot(u_state_mon_w.t / ms, u_state_mon_w[0].w_inh2u)
+    # xlabel('Time (ms)')
+    # ylabel('Potential')
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    #
+    # subplot(427)
+    # title("Synaptic Weight")
+    # for item in w_syn_u2inh_exc:
+    #     plot(w_syn_u2inh_exc.t / ms, item.w_syn)
+    # xlabel('Time (ms)')
+    # ylabel('Potential')
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    # yticks(np.arange(-0.1, 1.1, 0.1))
+    #
+    # subplot(428)
+    # title("Synaptic time pre spike")
+    # for item in u_state_mon_time:
+    #     plot(w_syn_u2inh_exc.t / ms, item.time)
+    # xlabel('Time (ms)')
+    # ylabel('Potential')
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    #
+    # show()
+    #
+    # # subplot(111)
+    # title("Som layer spikes")
+    # plot(som_spike_mon.t / ms, som_spike_mon.i, '.k')
+    # xlabel('Time (ms)')
+    # ylabel('Neuron index')
+    # grid(True)
+    # xticks(np.arange(0.0, simulation_time + step, step))
+    # yticks(np.arange(-1, map_size * map_size + 1, 1))
+    #
     # show()
 
-    subplot(422)
-    title("Inhibition neuron spikes")
-    plot(inh_spike_mon.t / ms, inh_spike_mon.i, '.k')
-    xlabel('Time (ms)')
-    ylabel('Neuron index')
-    grid(True)
-    xticks(np.arange(0.0, simulation_time + step, step))
-    yticks(np.arange(-1, 1, 1))
-
-    subplot(423)
-    title("u membrane potential")
-    for item in u_state_mon_v:
-        plot(u_state_mon_v.t / ms, item.v)
-    # plot(u_state_mon_v.t / ms, u_state_mon_v[0].v)
-    xlabel('Time (ms)')
-    ylabel('Potential')
-    xticks(np.arange(0.0, simulation_time + step, step))
-
-    subplot(424)
-    title("Inhibition neuron membrane potential")
-    plot(inh_state_mon.t / ms, inh_state_mon[0].v)
-    xlabel('Time (ms)')
-    ylabel('Potential')
-    xticks(np.arange(0.0, simulation_time + step, step))
-
-    subplot(425)
-    title("Excitation/inhibition interaction")
-    plot(w_exc_neu_state.t / ms, w_exc_neu_state[0].w_exc, w_exc_neu_state.t / ms, w_inh_neu_state[0].w_inh,
-         w_exc_neu_state.t / ms, w_exc_neu_state[0].w_exc - w_inh_neu_state[0].w_inh)
-    xlabel('Time (ms)')
-    ylabel('Potential')
-    xticks(np.arange(0.0, simulation_time + step, step))
-
-    subplot(426)
-    title("Inhibition to u potential")
-    plot(u_state_mon_w.t / ms, u_state_mon_w[0].w_inh2u)
-    xlabel('Time (ms)')
-    ylabel('Potential')
-    xticks(np.arange(0.0, simulation_time + step, step))
-
-    subplot(427)
-    title("Synaptic Weight")
-    for item in w_syn_u2inh_exc:
-        plot(w_syn_u2inh_exc.t / ms, item.w_syn)
-    xlabel('Time (ms)')
-    ylabel('Potential')
-    xticks(np.arange(0.0, simulation_time + step, step))
-    yticks(np.arange(-0.1, 1.1, 0.1))
-
-    subplot(428)
-    title("Synaptic time pre spike")
-    for item in u_state_mon_time:
-        plot(w_syn_u2inh_exc.t / ms, item.time)
-    xlabel('Time (ms)')
-    ylabel('Potential')
-    xticks(np.arange(0.0, simulation_time + step, step))
-
-    show()
-
-    # subplot(111)
-    title("Som layer spikes")
-    plot(som_spike_mon.t / ms, som_spike_mon.i, '.k')
-    xlabel('Time (ms)')
-    ylabel('Neuron index')
-    grid(True)
-    xticks(np.arange(0.0, simulation_time + step, step))
-    yticks(np.arange(-1, map_size * map_size + 1, 1))
-
-    show()
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
