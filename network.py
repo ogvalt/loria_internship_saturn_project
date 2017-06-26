@@ -1,4 +1,3 @@
-
 from brian2 import *
 
 from pyqtgraph.Qt import QtGui, QtCore
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     # potential_input = rf.float_to_membrane_potential(inputs)
     # potential_input = potential_input.flatten()
 
-    # TABLE 1 
+    # TABLE 1
     # (A) Neuronal parameters, used in (1) and (4)
     time_step = 0.01;
     tau_m = 10.0 * ms;
@@ -111,17 +110,16 @@ if __name__ == "__main__":
     # size of the self-organizing map
     map_size = 10
 
-
     temporal_layer_neuron_equ = '''
         dtime/dt = 1 / ms : 1
-        
+
         # inhibition connection to u layer
-        
+
         ds_inh2u/dt = (-s_inh2u)/tau_r_inh2u: 1
         dw_inh2u/dt = (s_inh2u - w_inh2u)/tau_f_inh2u: 1
 
         # membrane potential of u layer
-        
+
         dv/dt = (-v + I_ext - w_inh2u) / tau_m: 1
         I_ext : 1
     '''
@@ -229,30 +227,39 @@ if __name__ == "__main__":
     # inh2u_inhibition.w_syn = 'rand() * w_syn_inh2u_max'
     inh2u_inhibition.w_syn = 0.5 * w_syn_inh2u_max
     # som lateral connection
+    # radius = X - (X - X_)/(1+(2**0.5 - 1)*((global_time/T)**(2 * power_n)))
     som_synapse = Synapses(som_layer, target=som_layer, method=diff_method,
                            on_pre='''
-                           radius = X - (X - X_)/(1+(2**0.5 - 1)*((global_time/T)**(2 * power_n)))
-                           
+                           radius = X
                            y_pre = floor(i / map_size)
                            x_pre = i - y_pre * map_size
-                           
+
                            y_post = floor(j/map_size)
                            x_post = j - y_post * map_size
-                            
+
                            dist = (x_post - x_pre)**2 + (y_post - y_pre)**2
-                           
+
                            G1 = (1 + a) * exp(- dist/(radius**2)) / (2 * pi * radius**2)
                            G2 = a * exp(- dist/(b * radius)**2) / (2 * pi * (b * radius)**2)
-                           
+
                            w_syn = clip(G1 + G2, 0, w_syn_som_to_som_max)
-                           s_lateral += w_syn
+
+                           s_lateral += w_syn * w_lateral_stdp
+
+                           A_pre = (- w_syn) * A_minus * (1 - 1/tau_minus) * time_post
+                           w_lateral_stdp = clip(w_lateral + plasticity * A_pre, 0, 10)
                            ''',
                            on_post='''
+                           A_post = exp(-w_syn) * A_plus * (1 - 1/tau_plus) * time_pre
+                           w_lateral_stdp = clip(w_lateral + plasticity * A_post, 0, 10)
                            ''',
                            model='''
-                           w_syn : 1 # synaptic weight / synapse efficacy
+                           w_syn : 1 # neighbourhood function 
+                           w_lateral_stdp : 1 # synaptic weight, STDP to lateral connection
+                           plasticity : boolean (shared)
                            ''')
     som_synapse.connect(condition='i!=j')
+    som_synapse.w_lateral = 1.0
     # som afferent connection
     temporal_to_som_synapse = Synapses(temporal_layer, target=som_layer, method=diff_method,
                                        on_pre='''
@@ -269,7 +276,7 @@ if __name__ == "__main__":
                                        plasticity : boolean (shared)
                                        ''')
     temporal_to_som_synapse.connect()
-    temporal_to_som_synapse.w_syn = np.random.randint(low=40000, high=60000, size=N*map_size*map_size) \
+    temporal_to_som_synapse.w_syn = np.random.randint(low=40000, high=60000, size=N * map_size * map_size) \
                                     * w_syn_temporal_to_som_max / 100000.0
 
     # Visualization
@@ -298,6 +305,7 @@ if __name__ == "__main__":
     u2inh_inhibition.plasticity = plasticity_state
     inh2u_inhibition.plasticity = plasticity_state
     temporal_to_som_synapse.plasticity = True  # plasticity_state
+    som_synapse.plasticity = True
 
     # simulation_time = 200
     # run(simulation_time * ms, report='text')
@@ -305,24 +313,27 @@ if __name__ == "__main__":
 
     # simulation
     simulation_time = 50
-    attempts = 5
-    dataset = ArtificialDataSet(500, int(N/10))
+    attempts = 3
+    dataset_len = 500
+    dataset = ArtificialDataSet(dataset_len, int(N / 10))
     dataset = dataset.generate_set()
-    np.savetxt('dataset.txt', dataset, delimiter=';')
+    np.savetxt('dataset_stdp.txt', dataset, delimiter=';')
     plt.scatter(dataset[:, 0], dataset[:, 1], s=5)
     plt.show()
 
     net_model = Network(collect())
     net_model.store()
+    remains_counter = dataset_len * attempts
     for vector in dataset:
         for it in range(attempts):
             net_model.restore()
-            print("Input vector: {0}, attempt: {1}".format(vector, it))
+            print("Input vector: {0}, attempt: {1}, remains: {2}".format(vector, it, remains_counter))
             potential_input = rf.float_to_membrane_potential(vector)
             potential_input = potential_input.flatten()
             temporal_layer.I_ext = potential_input
             net_model.run(simulation_time * ms, report='text')
             net_model.store()
+            remains_counter -= 1
 
     # visual
     app = QtGui.QApplication([])
@@ -344,10 +355,16 @@ if __name__ == "__main__":
     p2.plot(u_spike_mon.t / ms, u_spike_mon.i[:], pen=None, symbol='o',
             symbolPen=None, symbolSize=5, symbolBrush=(255, 255, 255, 255))
     p2.showGrid(x=True, y=True)
+
+
     def updatePlot():
         p2.setXRange(*lr.getRegion(), padding=0)
+
+
     def updateRegion():
         lr.setRegion(p2.getViewBox().viewRange()[0])
+
+
     lr.sigRegionChanged.connect(updatePlot)
     p2.sigXRangeChanged.connect(updateRegion)
     updatePlot()
@@ -365,10 +382,16 @@ if __name__ == "__main__":
     p4.plot(som_spike_mon.t / ms, som_spike_mon.i[:], pen=None, symbol='o',
             symbolPen=None, symbolSize=5, symbolBrush=(255, 255, 255, 255))
     p4.showGrid(x=True, y=True)
+
+
     def updatePlot2():
         p4.setXRange(*lr1.getRegion(), padding=0)
+
+
     def updateRegion2():
         lr1.setRegion(p4.getViewBox().viewRange()[0])
+
+
     lr1.sigRegionChanged.connect(updatePlot2)
     p4.sigXRangeChanged.connect(updateRegion2)
     updatePlot2()
@@ -376,7 +399,7 @@ if __name__ == "__main__":
     u2som_syn_shape = temporal_to_som_synapse.w_syn[:].shape
     picture = temporal_to_som_synapse.w_syn[:].reshape(N, int(u2som_syn_shape[0] / N))
 
-    np.savetxt('weights.txt', picture, delimiter=';')
+    np.savetxt('weights_stpd.txt', picture, delimiter=';')
 
     win2 = QtGui.QMainWindow()
     win2.resize(800, 800)
@@ -471,5 +494,6 @@ if __name__ == "__main__":
 
 if __name__ == '__main__':
     import sys
+
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
